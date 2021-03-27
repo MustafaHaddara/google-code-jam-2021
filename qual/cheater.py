@@ -1,14 +1,48 @@
+import math
+
 def find_cheater():
-    max_correct = -1
-    max_idx = -1
+    records_by_player = [] # index = player id
+    num_players_solved = [0 for _ in range(10_000)] # index = question id
     for i in range(100):
-        num_correct = len([c for c in input() if c=='1'])
-        if num_correct > max_correct:
-            max_correct = num_correct
+        record = input()
+        records_by_player.append(record)
+        for i in range(len(record)):
+            if record[i] == '1':
+                num_players_solved[i] += 1
+
+    max_outliers = -1
+    max_idx = -1
+    for i, record in enumerate(records_by_player):
+        outliers = 0
+        # num solved is a rough estimate of their "skill"
+        solved = len([item for item in record if item == '1'])
+        s = 6 * (solved/10_000) - 3
+
+        for q_idx, success in enumerate(record):
+            diff = num_players_solved[q_idx] / 100
+            q = 6 * (1-diff) - 3
+
+            prob_q = sigmoid(s-q)
+            # if i == 58:
+            #     print(prob_q)
+            # if prob_q < 0.5 and success == '1':
+            #     outliers += 1
+            if prob_q > 0.9 and success == '0':
+                outliers += 1
+
+        if outliers > max_outliers:
+            max_outliers = outliers
             max_idx = i+1
 
     return max_idx
 
+# def iqr(skills):
+#     sort = sorted(skills)
+#     return sort[2500], sort[7500]
+
+def sigmoid(x):
+    denom = 1 + math.exp(-1 * x)
+    return 1 / denom
 
 if __name__ == "__main__":
     num_cases = int(input())
